@@ -15478,32 +15478,36 @@
     zoom: 16,
     pitch: 55
   });
-  window.AudioContext = window.AudioContext || window.webkitAudioContext;
-  const context = new AudioContext();
+  const context = new (window.AudioContext || window.webkitAudioContext)();
   let musicBuffer = null;
-  let bufferSource = null;
   const analyser = context.createAnalyser();
   analyser.minDecibels = -90;
   analyser.maxDecibels = -10;
   analyser.smoothingTimeConstant = 0.05;
+  const bufferSource = context.createBufferSource();
+  bufferSource.connect(context.destination);
+  bufferSource.connect(analyser);
+  const bins = 16;
+  analyser.fftSize = bins * 2;
   const loadSound = (url) => {
+    const buf = context.createBuffer(1, 1, 22050);
+    const src = context.createBufferSource();
+    src.buffer = buf;
+    src.connect(context.destination);
+    src.start(0);
     const request = new XMLHttpRequest();
     request.open("GET", url, true);
     request.responseType = "arraybuffer";
     request.onload = () => {
       context.decodeAudioData(request.response, (buffer) => {
         musicBuffer = buffer;
-        bufferSource = context.createBufferSource();
         bufferSource.buffer = buffer;
-        bufferSource.connect(context.destination);
-        bufferSource.connect(analyser);
         bufferSource.start(context.currentTime + 0.1);
       });
     };
     request.send();
   };
   let dataArray = null;
-  const bins = 16;
   map.on("load", () => {
     const maxHeight = 200;
     const binWidth = maxHeight / bins;
@@ -15528,7 +15532,6 @@
         }
       });
     }
-    analyser.fftSize = bins * 2;
     dataArray = new Uint8Array(bins);
   });
   const draw = (now) => {
