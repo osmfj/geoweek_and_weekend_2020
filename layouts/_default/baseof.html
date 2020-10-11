@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>{{ .Site.Title }}: {{ .Title }}</title>
+    <link rel="stylesheet" href="/main.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+  </head>
+  <body>
+    <!-- Code that all your templates share, like a header -->
+    {{ block "main" . }}
+    {{ .Content }}
+    {{ end }}
+    <footer>
+      <small>Copyright 2020 OSMFJ/OSGeo.JP</small>
+    </footer>
+  </body>
+</html>
