@@ -15,5 +15,9 @@
     <footer>
       <small>Copyright 2020 OSMFJ/OSGeo.JP</small>
     </footer>
+    {{ with resources.Get "js/index.ts" }}
+      {{ $js := resources.Get . | js.Build }}
+      <script src="{{ $js.Permalink }}"></script>
+    {{ end }}
   </body>
 </html>
