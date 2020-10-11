@@ -9,23 +9,36 @@ const map = new mapboxgl.Map({
 })
 const context = new (window.AudioContext || window.webkitAudioContext)()
 let musicBuffer = null;
+const bins = 16
 const analyser = context.createAnalyser()
 analyser.minDecibels = -90
 analyser.maxDecibels = -10
 analyser.smoothingTimeConstant = 0.05
-const bufferSource = context.createBufferSource()
-bufferSource.connect(context.destination)
-bufferSource.connect(analyser)
-const bins = 16
 analyser.fftSize = bins * 2
+let bufferSource;
+let loaded = false
+let playing = false
 
-const loadSound = (url: string) => {
-  // play silent
+const playSilence = () => {
   const buf = context.createBuffer(1, 1, 22050);
   const src = context.createBufferSource();
   src.buffer = buf;
   src.connect(context.destination);
   src.start(0);
+}
+
+const play = (buffer) => {
+  bufferSource = context.createBufferSource()
+  bufferSource.buffer = buffer
+  bufferSource.loop = true
+  bufferSource.connect(context.destination)
+  bufferSource.connect(analyser)
+  bufferSource.start(context.currentTime + 0.100)
+}
+
+const loadSound = (url: string) => {
+  // play silent
+  playSilence()
 
   const request = new XMLHttpRequest()
   request.open('GET', url, true)
@@ -33,9 +46,11 @@ const loadSound = (url: string) => {
 
   request.onload = () => {
     context.decodeAudioData(request.response, (buffer) => {
+      loaded = true
       musicBuffer = buffer
-      bufferSource.buffer = buffer
-      bufferSource.start(context.currentTime + 0.100)
+      if (playing) {
+        play(musicBuffer)
+      }
     })
   }
   request.send()
@@ -71,6 +86,8 @@ map.on('load', () => {
   dataArray = new Uint8Array(bins)
 })
 
+let requestId = null
+
 const draw = (now) => {
   analyser.getByteFrequencyData(dataArray)
   let avg = 0
@@ -94,16 +111,29 @@ const draw = (now) => {
       intensity: Math.min(1, (avg / 256) * 10)
   })
 
-  requestAnimationFrame(draw)
+  requestId = requestAnimationFrame(draw)
 }
 
 const btn = document.getElementById('button')
 btn.addEventListener('click', () => {
-  if (musicBuffer == null) {
-    loadSound('https://archive.org/download/OTMN051/3_memory-of-the-cartridge.mp3')
-    requestAnimationFrame(draw)
+  if (!playing) {
+    if (!loaded) {
+      loadSound('https://archive.org/download/OTMN051/3_memory-of-the-cartridge.mp3')
+    } else {
+      playSilence()
+      play(musicBuffer)
+    }
+    requestId = requestAnimationFrame(draw)
+    btn.textContent = 'Stop'
   } else {
-    !bufferSource || bufferSource.stop()
+    if (loaded) {
+      !bufferSource || bufferSource.stop()
+      bufferSource = null
+    }
+    cancelAnimationFrame(requestId)
+    requestId = null
+    btn.textContent = 'Play'
   }
+  playing = !playing
 }, false);
 
