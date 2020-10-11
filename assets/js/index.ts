@@ -7,7 +7,7 @@ const map = new mapboxgl.Map({
   zoom: 16,
   pitch: 55,
 })
-
+window.AudioContext = window.AudioContext || window.webkitAudioContext
 const context = new AudioContext()
 let musicBuffer = null;
 let bufferSource = null;
