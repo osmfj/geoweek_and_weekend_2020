@@ -1,8 +1,8 @@
-import mapboxgl from 'mapbox-gl'
+import { Map } from 'maplibre-gl'
 
-const map = new mapboxgl.Map({
+const map = new Map({
   container: 'map',
-  style: 'https://tile2.openstreetmap.jp/styles/osm-bright/style.json',
+  style: 'https://tile.openstreetmap.jp/styles/osm-bright/style.json',
   center: [139.767184, 35.680952],
   zoom: 16,
   pitch: 55,
